@@ -1,0 +1,132 @@
+html
+{
+	height: 100%;
+}
+div.question
+{
+	display: none;
+}
+div.answer
+{
+	display: none;
+}
+#header
+{
+	position: relative;
+	font-family: 'Gill Sans';
+	font-weight: bold;
+	text-align: center;
+	font-size: 50px;
+}
+#subheader
+{
+	font-size: 15px;
+	font-family: 'Gill Sans';
+	color: #444444;
+	position: relative;
+	margin-left: auto;
+	margin-right: auto;
+}
+#cardContainer
+{
+	position: relative;
+	height: 60%;
+	width: 40%;
+	margin-left: auto;
+	margin-right: auto;
+}
+#card
+{
+	box-shadow: 2px 2px 3px 0px;
+	position: relative;
+	font-family: 'Palatino Linotype';
+	font-size: 18px;
+	text-align: center;
+	height: 70%;
+	width: 100%;
+	border: 1px solid black;
+	margin: 20px;
+	padding: 5px;
+	margin-left: auto;
+	margin-right: auto;
+	display: table;
+}
+#cardNumber
+{
+	position: absolute;
+	font-family: 'Palatino Linotype';
+}
+#display
+{
+	display: table-cell;
+	vertical-align: middle;
+}
+.button
+{
+	border: 1px solid #dcdcdc;
+	display: inline-block;
+	color: #666666;
+	font-family: arial;
+	font-size: 15px;
+	font-weight: bold;
+	text-shadow: 1px 1px 0px #ffffff;
+	border-radius: 6px;
+	-moz-border-radius: 6px;
+	padding: 6px 6px;
+	text-align: center;
+	text-decoration: none;
+}
+.button:hover
+{
+	color: #222222;
+	border: 1px solid #222222;
+	box-shadow: 1px -.5px 1px 0px #999999;
+	cursor: pointer;
+}
+#buttons
+{
+	text-align: center;
+}
+input
+{
+	margin: 2px;
+}
+#addForm
+{
+	font-family: Arial;
+}
+#addContainer
+{
+	border: 2px dashed #666666;
+	width: 50%;
+	padding: 5px;
+	margin-left: auto;
+	margin-right: auto;
+}
+#leftContainer
+{
+	float: left;
+}
+#rightContainer
+{
+	float: right;
+	width: 20%;
+	position: relative;
+	margin-top: 3%;
+}
+#selectAnotherButton
+{
+	position: relative;
+	right: 25%;
+	left: -25%;
+}
+#createNewButton
+{
+	position: relative;
+	right: 25%;
+	left: -25%;
+}
+#selectAnotherMenu
+{
+	display: none;
+}
