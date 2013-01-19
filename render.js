@@ -2,7 +2,7 @@
 //
 // author: Tom Ladendorf (tladendo)
 
-// First, objects:
+/* OBJECTS! */
 
 // Node for use in the Linked List
 
@@ -106,7 +106,7 @@ Master.prototype.init = function(card) {
 	this.index = 0;
 }
 
-Master.prototype.reset = function() {
+Master.prototype.update = function() {
 	// first, let's clean this object up
 	this.currentCard = null;
 	this.currentCardNode = null;
@@ -135,13 +135,30 @@ Master.prototype.add = function(card) {
 	}
 }
 
-Master.prototype.removeCurrent = function() {
-	this.currentCardNode.remove();
+Master.prototype.del = function() {
+	$.ajax({type: 'POST', url: 'delcard.cgi?tablename=' + this.tableName + '&question=' + this.currentCard.question, async: false, success: function(text) { ans = $(text); }});
+	if (this.length == 0) return 0;
 	this.length--;
-	this.cardList.length--;
+	var next = this.currentCardNode.next;
+	var prev = this.currentCardNode.prev;
+	if (prev != null) {
+		prev.setNext(next);
+	} else {
+		next.setPrev(prev);
+	}
+	if (next == null) {
+		this.currentCardNode = prev;
+	} else {
+		this.currentCardNode = next;
+	}
+	this.currentCard = this.currentCardNode.value;
+	this.displayCurrent();
 }
 
 Master.prototype.displayCurrent = function() {
+	if (this.index == this.length) {
+		this.index--;
+	}
 	$("#display").text(this.currentCard.current);
 	$("#cardNumber").text(this.index + 1);
 }
@@ -172,6 +189,7 @@ Master.prototype.retreat = function() {
 }
 
 Master.prototype.displayNext = function() {
+	console.log(this);
 	this.advance();
 	this.displayCurrent();
 }
@@ -182,9 +200,11 @@ Master.prototype.displayPrev = function() {
 }
 
 Master.prototype.actionInit = function() {
-	$("#card").click(this.flip);
-	$("#next").click(this.displayNext);
-	$("#prev").click(this.displayPrev);
+	var master = this;
+	$("#card").click(function() { master.flip(); });
+	$("#next").click(function() { master.displayNext(); });
+	$("#prev").click(function() { master.displayPrev(); });
+	$("#delete").click(function() { master.del(); });
 }
 
 Master.prototype.dismantle = function() {
@@ -193,17 +213,102 @@ Master.prototype.dismantle = function() {
 	$("#prev").unbind(this.displayPrev);
 }
 
+/* END OBJECTS */
 
+/* OTHER IMPORTANT FUNCTIONS */
 
+// this function is tied to the "SELECT ANOTHER SET" button
+function displaySelectAnother(ev) {
+	$("#rightContainer").children().remove();
+	$("#selectAnotherMenu").css("display", "inline");
+	$("#rightContainer").append($("#selectAnotherMenu"));
+	var selectButton = "<a class='button' id='selectSubmitButton'>SELECT</a>";
+	$("#rightContainer").append($("<br />")).append($("<br />")).append($(selectButton));
+	// add event listener to select button
+	$("#selectSubmitButton").click(ev.data, selectNewSet);
+}
+
+// this function is tied to the "SELECT ANOTHER SET" > "SELECT" button
+function selectNewSet(ev) {
+	var master = ev.data
+	// As a safety/debugging measure, get rid of all the old cards
+	$("div.pair").remove();
+	// Make a request for the cards from the desired set and store them in a variable
+	var select = $("#selectAnotherMenu").val();
+	master.tableName = select;
+	// Will return a div jQuery object
+	var ans = {};
+	// TODO: make this AJAX call work
+	$.ajax({type: 'GET', url: 'dbget.cgi?' + select, async: false, success: function(text) { ans = $(text); }});
+	function add(elt) {
+		$("body").append(elt);
+	}
+	ans.children().each(function() { add($(this)); });
+	master.update();
+	global = master;
+	/*
+	// using "global" is a hack. fix it
+	global.ans = ansObj;
+	global.reset();
+	//var p = $.ajax({type: 'POST', url: 'http://www.tomladendorf.com/flashcards/addcard.cgi', data: "first_name=Tom&last_name=Ladendorf"});
+	*/
+}
+
+// displays input when "ADD A NEW CARD" is clicked
+function displayInput(ev) {
+	$("#buttons a:last-child").remove();
+	var form = "<form id='addForm'>Q: "
+	+ "<input type='text' id='questionField' /><br />" +
+	"A: <input type='text' id='answerField' /></form>";
+	$("#buttons").append($("<div id='addContainer'></div>"));
+	$("#addContainer").append($(form));
+	$("#addContainer").append($("<a id='newCardSubmit' class='button'>" +
+	"ADD NEW CARD</a>"));
+	$("#newCardSubmit").click(ev.data, postInput);
+	$("#addContainer").append($("<span>&nbsp;&nbsp</span>"));
+	$("#addContainer").append($("<a id='cancel' class='button'>CANCEL</a>"));
+	$("#cancel").click(ev.data, cancel);
+}
+// posts input for a new card
+function postInput(ev) {
+	//var p = $.ajax({type: 'POST', url: 'http://www.tomladendorf.com/flashcards/addcard.cgi', data: "first_name=Tom&last_name=Ladendorf"});
+	var question = $("#questionField").val();
+	var answer = $("#answerField").val();
+	var master = ev.data;
+	var back = $.post("addcard.cgi", "question=" + question + "&answer=" + answer + "&id=" + master.length + "&tablename=" + master.tableName, function(data) {
+		//alert("DATA: " + data);
+	});
+	var newPair = "<div class='pair'><div class='question'>" + question + "</div><div class='answer'>" + answer + "</div></div>";
+	$("body").append($(newPair));
+	master.add(new Card(question, answer));
+	$("#addContainer").remove();
+	$("#buttons").append($("<a id='add' class='button'>ADD A NEW CARD</a>"));
+	$("#add").click(ev.data, displayInput);
+	$("body").append($(back));
+}
+// cancels adding a new card
+function cancel(ev) {
+	$("#addContainer").remove();
+	$("#buttons").append($("<a id='add' class='button'>ADD A NEW CARD</a>"));
+	$("#add").click(ev.data, displayInput);
+}
+
+/* END ADDL FUNCTIONS */
+
+// for debugging purposes
 var global = {};
 
+// This is where everything happens
 $("document").ready(function() {
 	// Create the master object and pull in all the existing divs
 	var master = new Master();
 	master.actionInit();
 	global = master;
 	$("#selectAnotherButton").click(master, displaySelectAnother);
+	master.tableName = "cards";
+	$("#add").click(master, displayInput);
 });
+
 /*
 $("document").ready(function() {
 	// find all the question/answer pairs
@@ -241,32 +346,7 @@ $("document").ready(function() {
 	});
 });
 */
-function displaySelectAnother(master) {
-	$("#rightContainer").children().remove();
-	$("#selectAnotherMenu").css("display", "inline");
-	$("#rightContainer").append($("#selectAnotherMenu"));
-	var selectButton = "<a class='button' id='selectSubmitButton'>SELECT</a>";
-	$("#rightContainer").append($("<br />")).append($("<br />")).append($(selectButton));
-	// add event listener to select button
-	$("#selectSubmitButton").click(master, selectNewSet);
-}
-var global = {};
-function selectNewSet(master) {
-	// As a safety/debugging measure, get rid of all the old cards
-	$("div.pair").remove();
-	// Make a request for the cards from the desired set and store them in a variable
-	var select = $("#selectAnotherMenu").val();
-	// Will return a div jQuery object
-	var ans = {};
-	// TODO: make this AJAX call work
-	$.ajax({type: 'GET', url: 'dbget.cgi?' + select, async: false, success: function(text) { ans = $(text); }});
-	var ansObj = $(ans.responseText);
-	$("body").append(ansObj);
-	// using "global" is a hack. fix it
-	global.ans = ansObj;
-	global.reset();
-	//var p = $.ajax({type: 'POST', url: 'http://www.tomladendorf.com/flashcards/addcard.cgi', data: "first_name=Tom&last_name=Ladendorf"});
-}
+
 function displayCreateNew(ev) {
 
 }
@@ -325,39 +405,4 @@ function retreat(ev) {
 		update(ev.data);
 	}
 }
-function displayInput(ev) {
-	$("#buttons a:last-child").remove();
-	var form = "<form id='addForm'>Q: "
-	+ "<input type='text' id='questionField' /><br />" +
-	"A: <input type='text' id='answerField' /></form>";
-	$("#buttons").append($("<div id='addContainer'></div>"));
-	$("#addContainer").append($(form));
-	$("#addContainer").append($("<a id='newCardSubmit' class='button'>" +
-	"ADD NEW CARD</a>"));
-	$("#newCardSubmit").click(ev.data, postInput);
-	$("#addContainer").append($("<span>&nbsp;&nbsp</span>"));
-	$("#addContainer").append($("<a id='cancel' class='button'>CANCEL</a>"));
-	$("#cancel").click(ev.data, cancel);
-}
-function postInput(ev) {
-	//var p = $.ajax({type: 'POST', url: 'http://www.tomladendorf.com/flashcards/addcard.cgi', data: "first_name=Tom&last_name=Ladendorf"});
-	var question = $("#questionField").val();
-	var answer = $("#answerField").val();
-	var id = ev.data.max;
-	var back = $.post("addcard.cgi", "question=" + question + "&answer=" + answer + "&id=" + id + "&tablename=" + ev.data.table, function(data) {
-		//alert("DATA: " + data);
-	});
-	var newPair = "<div class='pair'><div class='question'>" + question + "</div><div class='answer'>" + answer + "</div></div>";
-	$("body").append($(newPair));
-	ev.data.pairs = $("div.pair");
-	ev.data.max = ev.data.pairs.size();
-	$("#addContainer").remove();
-	$("#buttons").append($("<a id='add' class='button'>ADD A NEW CARD</a>"));
-	$("#add").click(ev.data, displayInput);
-	$("body").append($(back));
-}
-function cancel(ev) {
-	$("#addContainer").remove();
-	$("#buttons").append($("<a id='add' class='button'>ADD A NEW CARD</a>"));
-	$("#add").click(ev.data, displayInput);
-}
+

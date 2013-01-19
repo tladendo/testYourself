@@ -21,21 +21,19 @@ foreach $pair (@pairs) {
 	$FORM{$name} = $value;
 }
 my $question = $FORM{question};
-my $answer = $FORM{answer};
-my $id = $FORM{id};
 my $tablename = $FORM{tablename};
 if (length($tablename) == 0) {
 	$tablename = "cards";
 }
 
-my $hostname = <INSERT HOSTNAME>
-my $username = <INSERT USERNAME>
-my $password = <INSERT PASSWORD>
-my $dbname = <INSERT DBNAME>
+my $hostname = "<INSERT HOSTNAME>";
+my $username = "<INSERT USERNAME>";
+my $password = "<INSERT PASSWORD>";
+my $dbname = "<INSERT DBNAME>";
 
 my $db_handle = DBI->connect("dbi:mysql:database=$dbname;host=$hostname;user=$username;password=$password", {AutoCommit => 1},) or die "Couldn't connect: $DBI::errstr\n";
 
-my $pre = "INSERT INTO $tablename (id, question, answer) VALUES (?, ?, ?)";
+my $pre = "DELETE FROM $tablename WHERE question=$question";
 my $statement = $db_handle->prepare($pre) or die "oh no!";
 $statement->execute($id, $question, $answer) or die "oh no!";
 $db_handle->commit;
