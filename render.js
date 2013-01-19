@@ -106,6 +106,26 @@ Master.prototype.init = function(card) {
 	this.index = 0;
 }
 
+Master.prototype.reset = function() {
+	// first, let's clean this object up
+	this.currentCard = null;
+	this.currentCardNode = null;
+	this.cardList = null;
+	this.length = null;
+	this.index = null;
+	// next, let's initialize everything from and bring in the new divs
+	var master = this;
+	$("div.pair").each(
+		function() {
+			var kids = $(this).children();
+			var question = $(kids[0]).text();
+			var answer = $(kids[1]).text();
+			master.add(new Card(question, answer));
+		});
+	master.displayCurrent();
+	
+}
+
 Master.prototype.add = function(card) {
 	if (this.length == 0 || this.length == null) {
 		this.init(card);
@@ -161,21 +181,28 @@ Master.prototype.displayPrev = function() {
 	this.displayCurrent();
 }
 
+Master.prototype.actionInit = function() {
+	$("#card").click(this.flip);
+	$("#next").click(this.displayNext);
+	$("#prev").click(this.displayPrev);
+}
+
+Master.prototype.dismantle = function() {
+	$("#card").unbind(this.flip);
+	$("#next").unbind(this.displayNext);
+	$("#prev").unbind(this.displayPrev);
+}
+
+
+
 var global = {};
 
 $("document").ready(function() {
 	// Create the master object and pull in all the existing divs
 	var master = new Master();
+	master.actionInit();
 	global = master;
-	$("#card").click(function() {
-		master.flip();
-	});
-	$("#next").click(function() {
-		master.displayNext();
-	});
-	$("#prev").click(function() {
-		master.displayPrev();
-	});
+	$("#selectAnotherButton").click(master, displaySelectAnother);
 });
 /*
 $("document").ready(function() {
@@ -214,54 +241,30 @@ $("document").ready(function() {
 	});
 });
 */
-function displaySelectAnother(ev) {
+function displaySelectAnother(master) {
 	$("#rightContainer").children().remove();
 	$("#selectAnotherMenu").css("display", "inline");
 	$("#rightContainer").append($("#selectAnotherMenu"));
 	var selectButton = "<a class='button' id='selectSubmitButton'>SELECT</a>";
 	$("#rightContainer").append($("<br />")).append($("<br />")).append($(selectButton));
 	// add event listener to select button
-	$("#selectSubmitButton").click(ev.data, selectNewSet);
+	$("#selectSubmitButton").click(master, selectNewSet);
 }
 var global = {};
-function selectNewSet(ev) {
+function selectNewSet(master) {
 	// As a safety/debugging measure, get rid of all the old cards
 	$("div.pair").remove();
-	ev.data.pairs = [];
-	ev.data.pairIndex = 0;
-	ev.data.max = 0;
 	// Make a request for the cards from the desired set and store them in a variable
 	var select = $("#selectAnotherMenu").val();
-	ev.data.table = select;
 	// Will return a div jQuery object
 	var ans = {};
+	// TODO: make this AJAX call work
 	$.ajax({type: 'GET', url: 'dbget.cgi?' + select, async: false, success: function(text) { ans = $(text); }});
 	var ansObj = $(ans.responseText);
-	// find all the question/answer pairs
-	var pairs = $($("div.pair", ans));
-	global.pairs = pairs;
-	var max = pairs.size();
-	// captures the first pair in a variable as a jQuery object
-	var currentPair = $(pairs[0]);
-	// gets the test of the current pair's question
-	var currentQuestion = $(currentPair.children()[0]).text();
-	// gets the test of the current pair's answer
-	var currentAnswer = $(currentPair.children()[1]).text();
-	ev.data.pairs = pairs;
-	ev.data.currentPair = currentPair;
-	ev.data.onDisplay = currentQuestion;
-	ev.data.currentQuestion = currentQuestion;
-	ev.data.currentAnswer= currentAnswer;
-	ev.data.pairIndex = 0;
-	ev.data.max = max;
-	update(ev.data);
-	for (var i = 0; i < ev.data.max; i++) {
-		var currentPair = $(ev.data.pairs[i]);
-		var question = $(currentPair.children()[0]).text();
-		var answer = $(currentPair.children()[1]).text();
-		var newPair = "<div class='pair'><div class='question'>" + question + "</div><div class='answer'>" + answer + "</div></div>";
-		$("body").append($(newPair));
-	}
+	$("body").append(ansObj);
+	// using "global" is a hack. fix it
+	global.ans = ansObj;
+	global.reset();
 	//var p = $.ajax({type: 'POST', url: 'http://www.tomladendorf.com/flashcards/addcard.cgi', data: "first_name=Tom&last_name=Ladendorf"});
 }
 function displayCreateNew(ev) {
