@@ -1,6 +1,183 @@
-// TODO: refactor and take an object-oriented approach.
-// this is a little hard to read.
+// render.js - frontend js for the testYourself flashcard game
+//
+// author: Tom Ladendorf (tladendo)
 
+// First, objects:
+
+// Node for use in the Linked List
+
+function Node(value) {
+	this.value = value;
+	this.prev = null;
+	this.next = null;
+}
+Node.prototype.setNext = function(node) {
+	if (node == null) {
+		this.next = null;
+		return false;
+	} else {
+		this.next = node;
+		node.prev = this;
+	}
+}
+Node.prototype.setPrev = function(node) {
+	if (node == null) {
+		this.prev = null;
+		return false;
+	} else {
+		this.prev = node;
+		node.next = this;
+	}
+}
+Node.prototype.remove = function() {
+	if (this.prev != null) {
+		this.prev.setNext(this.next);
+	}
+	if (this.next != null) {
+		this.next.setPrev(this.prev);
+	}
+}
+
+// Linked List implementation
+function LL() {
+	this.length = 0;
+	this.head = null;
+	this.tail = null;
+}
+function LL(node) {
+	this.head = node;
+	this.tail = node;
+	this.length = 1;
+}
+LL.prototype.add = function(node) {
+	if (this.length == 0) {
+		this.head = node;
+		this.tail = node;
+		this.length = 1;
+	}
+	else {
+		this.tail.setNext(node);
+		this.tail = node;
+		this.length++;
+	}
+}
+
+
+// Card object that represents flashcards
+function Card() {}
+function Card(question, answer) {
+	this.question = question;
+	this.answer = answer;
+	this.current = question;
+	this.onQuestion = true;
+}
+
+Card.prototype.flip = function() {
+	if (this.onQuestion == true) {
+		this.current = this.answer;
+		this.onQuestion = false;
+	} else {
+		this.current = this.question;
+		this.onQuestion = true;
+	}
+}
+
+// Master object takes the place of a global state variable
+
+// Default constructor pulls from divs on page
+function Master() {
+	var master = this;
+	$("div.pair").each(
+		function() {
+			var kids = $(this).children();
+			var question = $(kids[0]).text();
+			var answer = $(kids[1]).text();
+			master.add(new Card(question, answer));
+		});
+	master.displayCurrent();
+}
+
+
+Master.prototype.init = function(card) {
+	this.currentCard = card;
+	this.currentCardNode = new Node(card);
+	this.cardList = new LL(this.currentCardNode);
+	this.length = 1;
+	this.index = 0;
+}
+
+Master.prototype.add = function(card) {
+	if (this.length == 0 || this.length == null) {
+		this.init(card);
+	} else {
+		this.cardList.add(new Node(card));
+		this.length++;
+	}
+}
+
+Master.prototype.removeCurrent = function() {
+	this.currentCardNode.remove();
+	this.length--;
+	this.cardList.length--;
+}
+
+Master.prototype.displayCurrent = function() {
+	$("#display").text(this.currentCard.current);
+	$("#cardNumber").text(this.index + 1);
+}
+
+Master.prototype.flip = function() {
+	this.currentCard.flip();
+	this.displayCurrent();
+}
+
+Master.prototype.advance = function() {
+	if (this.index < this.length - 1) {
+		this.index++;
+		this.currentCardNode = this.currentCardNode.next;
+		this.currentCard = this.currentCardNode.value;
+	} else {
+		// do nothing
+	}
+}
+
+Master.prototype.retreat = function() {
+	if (this.index > 0) {
+		this.index--;
+		this.currentCardNode = this.currentCardNode.prev;
+		this.currentCard = this.currentCardNode.value;
+	} else {
+		// do nothing
+	}
+}
+
+Master.prototype.displayNext = function() {
+	this.advance();
+	this.displayCurrent();
+}
+
+Master.prototype.displayPrev = function() {
+	this.retreat();
+	this.displayCurrent();
+}
+
+var global = {};
+
+$("document").ready(function() {
+	// Create the master object and pull in all the existing divs
+	var master = new Master();
+	global = master;
+	$("#card").click(function() {
+		master.flip();
+	});
+	$("#next").click(function() {
+		master.displayNext();
+	});
+	$("#prev").click(function() {
+		master.displayPrev();
+	});
+});
+/*
 $("document").ready(function() {
 	// find all the question/answer pairs
 	var pairs = $("div.pair");
@@ -26,7 +203,8 @@ $("document").ready(function() {
 	$("#selectAnotherButton").click(data, displaySelectAnother);
 	// button to create a new card
 	$("#createNewButton").click(data, displayCreateNew);
-	/*
+	
+
 	$("div.pair").each(function() {
 		var question = $($(this).children()[0]).text();
 		$("body").append($("<h4>Question " + count++ + ":</h4>"));
@@ -34,8 +212,8 @@ $("document").ready(function() {
 		var answer = $($(this).children()[1]).text();
 		$("body").append($("<p>Answer: " + answer + "</p>"));
 	});
-	*/
 });
+*/
 function displaySelectAnother(ev) {
 	$("#rightContainer").children().remove();
 	$("#selectAnotherMenu").css("display", "inline");
