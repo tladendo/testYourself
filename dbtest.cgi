@@ -31,17 +31,18 @@ print <<END;
 	<div id="buttons">
 		<a id="prev" class="button">PREV</a>
 		<a id="next" class="button">NEXT</a><br /><br />
-		<a id="add" class="button">ADD A NEW CARD</a><br /><br />
-		<a id="delete" class="button">DELETE CURRENT CARD</a><br /><br />
-		<a class="button" id="return" href="index.html">RETURN TO MAIN PAGE</a>
+		<a id="add" class="button">ADD A NEW CARD</a>
+		<a id="setAside" class="button">SET ASIDE CURRENT CARD</a><br /><br />
+		<a id="delete" class="button">PERMANENTLY REMOVE CURRENT CARD</a>
+		<a id="flipAll" class="button">FLIP ALL CARDS</a>
 	</div>
 </div>
 END
 
-my $hostname = <INSERT HOSTNAME>
-my $username = <INSERT USERNAME>
-my $password = <INSERT PASSWORD>
-my $dbname = <INSERT DBNAME>
+my $hostname = "<INSERT HOSTNAME>";
+my $username = "<INSERT USERNAME>";
+my $password = "<INSERT PASSWORD>";
+my $dbname = "<INSERT DBNAME>";
 
 my $dbh = DBI->connect("dbi:mysql:database=$dbname;host=$hostname;user=$username;password=$password") or die "Couldn't connect: $DBI::errstr\n";
 

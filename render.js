@@ -69,15 +69,18 @@ function Card(question, answer) {
 	this.question = question;
 	this.answer = answer;
 	this.current = question;
+	this.other = answer;
 	this.onQuestion = true;
 }
 
 Card.prototype.flip = function() {
 	if (this.onQuestion == true) {
 		this.current = this.answer;
+		this.other = this.question;
 		this.onQuestion = false;
 	} else {
 		this.current = this.question;
+		this.other = this.answer;
 		this.onQuestion = true;
 	}
 }
@@ -95,6 +98,7 @@ function Master() {
 			master.add(new Card(question, answer));
 		});
 	master.displayCurrent();
+	master.flipped = false;
 }
 
 
@@ -165,7 +169,11 @@ Master.prototype.displayCurrent = function() {
 	if (this.index == this.length) {
 		this.index--;
 	}
-	$("#display").text(this.currentCard.current);
+	if (this.flipped) {
+		$("#display").text(this.currentCard.other);
+	} else {
+		$("#display").text(this.currentCard.current);
+	}
 	$("#cardNumber").text(this.index + 1);
 }
 
@@ -205,6 +213,15 @@ Master.prototype.displayPrev = function() {
 	this.displayCurrent();
 }
 
+Master.prototype.flipAll = function() {
+	if (this.flipped) {
+		this.flipped = false;
+	} else {
+		this.flipped = true;
+	}
+	this.displayCurrent();
+}
+
 Master.prototype.actionInit = function() {
 	var master = this;
 	$("#card").click(function() { master.flip(); });
@@ -212,6 +229,7 @@ Master.prototype.actionInit = function() {
 	$("#prev").click(function() { master.displayPrev(); });
 	$("#setAside").click(function() { master.deleteFromSession(); });
 	$("#delete").click(function() { master.permanentlyRemove(); });
+	$("#flipAll").click(function() { master.flipAll(); });
 }
 
 Master.prototype.dismantle = function() {
