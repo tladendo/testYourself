@@ -285,13 +285,26 @@ Master.prototype.dismantle = function() {
 
 // this function is tied to the "SELECT ANOTHER SET" button
 function displaySelectAnother(ev) {
+	// FIXME: this hack
+	global.rightButtonsContainer = $("#rightButtonsContainer");
+	$("#selectAnotherMenu").css("display", "inline");
 	$("#rightContainer").children().remove();
 	$("#selectAnotherMenu").css("display", "inline");
 	$("#rightContainer").append($("#selectAnotherMenu"));
 	var selectButton = "<a class='button' id='selectSubmitButton'>SELECT</a>";
+	var cancelButton = "<a class='button' id='cancelSubmitButton'>CANCEL</a>";
 	$("#rightContainer").append($("<br />")).append($("<br />")).append($(selectButton));
+	$("#rightContainer").append($("<br />")).append($(cancelButton));
 	// add event listener to select button
 	$("#selectSubmitButton").click(ev.data, selectNewSet);
+	$("#cancelSubmitButton").click(ev.data, cancelSelectNewSet);
+}
+
+function cancelSelectNewSet(ev) {
+	$("body").append($("#selectAnotherMenu").css("display", "none"));
+	$("#rightContainer").children().remove();
+	$("#rightContainer").append(global.rightButtonsContainer);
+	listenRight(ev.data);
 }
 
 // this function is tied to the "SELECT ANOTHER SET" > "SELECT" button
@@ -304,7 +317,6 @@ function selectNewSet(ev) {
 	master.tableName = select;
 	// Will return a div jQuery object
 	var ans = {};
-	// TODO: make this AJAX call work
 	$.ajax({type: 'GET', url: 'dbget.cgi?' + select, async: false, success: function(text) { ans = $(text); }});
 	function add(elt) {
 		$("body").append(elt);
@@ -312,6 +324,7 @@ function selectNewSet(ev) {
 	ans.children().each(function() { add($(this)); });
 	master.update();
 	global = master;
+	cancelSelectNewSet(master);
 	/*
 	// using "global" is a hack. fix it
 	global.ans = ansObj;
@@ -331,7 +344,7 @@ function displayInput(ev) {
 	$("#addContainer").append($("<a id='newCardSubmit' class='button'>" +
 	"ADD NEW CARD</a>"));
 	$("#newCardSubmit").click(ev.data, postInput);
-	$("#addContainer").append($("<span>&nbsp;&nbsp</span>"));
+	$("#addContainer").append($("<span>&nbsp;&nbsp;</span>"));
 	$("#addContainer").append($("<a id='cancel' class='button'>CANCEL</a>"));
 	$("#cancel").click(ev.data, cancel);
 }
@@ -355,8 +368,70 @@ function postInput(ev) {
 // cancels adding a new card
 function cancel(ev) {
 	$("#addContainer").remove();
-	$("#buttons").append($("<a id='add' class='button'>ADD A NEW CARD</a>"));
-	$("#add").click(ev.data, displayInput);
+}
+
+function createNewSet(ev) {
+	// FIXME: this hack
+	global.rightButtonsContainer = $("#rightButtonsContainer");
+	$("#rightContainer").children().remove();
+	var form = "<form id='addForm'>NAME: "
+	+ "<input type='text' id='tableName' /><br />" +
+	"Q: &nbsp;&nbsp;<input type='text' id='questionField' /><br />" +
+	"A: &nbsp;&nbsp;<input type='text' id='answerField' /></form>";
+	$("#rightContainer").append($("<div id='createContainer'></div>"));
+	$("#createContainer").append($(form));
+	$("#createContainer").append($("<a id='newSetSubmit' class='button'>" +
+	"ADD NEW SET</a>"));
+	$("#newSetSubmit").click(ev.data, postSet);
+	$("#createContainer").append($("<span>&nbsp;&nbsp</span>"));
+	$("#createContainer").append($("<a id='cancel' class='button'>CANCEL</a>"));
+	$("#cancel").click(ev.data, cancelCreate);
+}
+
+function postSet(ev) {
+	var tablename = $("#tableName").val();
+	var question = $("#questionField").val();
+	var answer = $("#answerField").val();
+	$.post("createset.cgi", "question=" + question + "&id=1&answer=" + answer + "&tablename=" + tablename, function(data) { });
+	cancelCreate(ev.data);
+}
+
+function cancelCreate(ev) {
+	$("#rightContainer").children().remove();
+	$("#rightContainer").append(global.rightButtonsContainer);
+	listenRight(ev.data);
+}
+
+function deleteCurrentSet(ev) {
+	console.log(ev.data);
+	var master = ev.data;
+	$.post("delset.cgi", "tablename=" + master.tableName, function(data) { });
+	var msg = "Set deleted. Please select another!";
+	var card = new Card(msg, msg);
+	var node = new Node(card);
+	node.setNext(node);
+	ev.data.currentCardNode = node;
+	ev.data.currentCard = card;
+	ev.data.displayCurrent();
+	removeSetOption(ev.data.tableName);
+}
+
+function removeSetOption(op) {
+	$("#selectAnotherMenu").children().each(function() {
+		if ($(this).val() == op) {
+			$(this).remove();
+		}
+	});
+}
+
+function listenRight(master) {
+	// TODO: fix this hack
+	if (master == undefined) {
+		master = global;
+	}
+	$("#selectAnotherButton").click(master, displaySelectAnother);
+	$("#createNewButton").click(master, createNewSet);
+	$("#deleteSetButton").click(master, deleteCurrentSet);
 }
 
 /* END ADDL FUNCTIONS */
@@ -370,8 +445,8 @@ $("document").ready(function() {
 	var master = new Master();
 	master.actionInit();
 	global = master;
-	$("#selectAnotherButton").click(master, displaySelectAnother);
 	master.tableName = "cards";
 	$("#add").click(master, displayInput);
+	listenRight(master);
 });
 

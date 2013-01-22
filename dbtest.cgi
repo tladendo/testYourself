@@ -18,10 +18,15 @@ print <<END;
 
 </div>
 <div id="rightContainer">
-	<a id="selectAnotherButton" class="button">SELECT ANOTHER SET</a>
-	<br />
-	<br />
-	<a id="createNewButton" class="button">CREATE A NEW SET</a>
+		<div id="rightButtonsContainer">
+			<a id="selectAnotherButton" class="button">SELECT ANOTHER SET</a>
+			<br />
+			<br />
+			<a id="createNewButton" class="button">CREATE A NEW SET</a>
+			<br />
+			<br />
+			<a id="deleteSetButton" class="button">DELETE CURRENT SET</a>
+		</div>
 </div>
 <div id="cardContainer">
 	<div id="card">
