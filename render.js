@@ -61,7 +61,37 @@ LL.prototype.add = function(node) {
 		this.length++;
 	}
 }
-
+LL.prototype.toString = function() {
+	var ans = "";
+	var currentNode = this.head;
+	while (currentNode != null) {
+		ans += currentNode.value + ", ";
+		currentNode = currentNode.next;
+	}
+	return ans;
+}
+LL.prototype.shuffle = function() {
+	var currentNode = this.head;
+	var arr = [];
+	while (currentNode != null) {
+		arr.push(currentNode.value);
+		currentNode = currentNode.next;
+	}
+	for (var i = 0; i < this.length; i++) {
+		var j = Math.floor(Math.random() * this.length);
+		var temp = arr[i];
+		arr[i] = arr[j];
+		arr[j] = temp;
+	}
+	this.head = new Node(arr[0]);
+	currentNode = this.head;
+	for (var i = 1; i < this.length; i++) {
+		var newNode = new Node(arr[i]);
+		currentNode.setNext(newNode);
+		currentNode = newNode;
+	}
+	this.tail = currentNode;
+}
 
 // Card object that represents flashcards
 function Card() {}
@@ -139,6 +169,14 @@ Master.prototype.add = function(card) {
 	}
 }
 
+Master.prototype.shuffle = function() {
+	this.cardList.shuffle();
+	this.currentCardNode = this.cardList.head;
+	this.currentCard = this.currentCardNode.value;
+	this.index = 0;
+	this.displayCurrent();
+}
+
 Master.prototype.permanentlyRemove = function() {
 	//$.ajax({type: 'POST', url: 'delcard.cgi?tablename=' + this.tableName + '&question=' + this.currentCard.question, async: false, success: function() { }});
 	$.post("delcard.cgi", "question=" + this.currentCard.question + "&tablename=" + this.tableName, function(data) { });
@@ -149,15 +187,18 @@ Master.prototype.deleteFromSession = function() {
 	// $.ajax({type: 'POST', url: 'delcard.cgi?tablename=' + this.tableName + '&question=' + this.currentCard.question, async: false, success: function(text) { ans = $(text); }});
 	if (this.length == 0) return 0;
 	this.length--;
+	this.cardList.length--;
 	var next = this.currentCardNode.next;
 	var prev = this.currentCardNode.prev;
 	if (prev != null) {
 		prev.setNext(next);
+		this.cardList.head = next;
 	} else {
 		next.setPrev(prev);
 	}
 	if (next == null) {
 		this.currentCardNode = prev;
+		this.cardList.tail = prev;
 	} else {
 		this.currentCardNode = next;
 	}
@@ -203,7 +244,6 @@ Master.prototype.retreat = function() {
 }
 
 Master.prototype.displayNext = function() {
-	console.log(this);
 	this.advance();
 	this.displayCurrent();
 }
@@ -230,6 +270,7 @@ Master.prototype.actionInit = function() {
 	$("#setAside").click(function() { master.deleteFromSession(); });
 	$("#delete").click(function() { master.permanentlyRemove(); });
 	$("#flipAll").click(function() { master.flipAll(); });
+	$("#shuffle").click(function() { master.shuffle(); });
 }
 
 Master.prototype.dismantle = function() {
@@ -333,101 +374,4 @@ $("document").ready(function() {
 	master.tableName = "cards";
 	$("#add").click(master, displayInput);
 });
-
-/*
-$("document").ready(function() {
-	// find all the question/answer pairs
-	var pairs = $("div.pair");
-	var pairIndex = 0;
-	var max = pairs.size();
-	// captures the first pair in a variable as a jQuery object
-	var currentPair = $(pairs[pairIndex]);
-	// gets the test of the current pair's question
-	var currentQuestion = $(currentPair.children()[0]).text();
-	// gets the test of the current pair's answer
-	var currentAnswer = $(currentPair.children()[1]).text();
-	// master variable
-	var data = {pairs: pairs, currentPair: currentPair, onDisplay: currentQuestion, currentQuestion: currentQuestion, currentAnswer: currentAnswer, pairIndex: pairIndex, max: max, table: "cards"};
-	// for DEBUG purposes
-	global.data = data;
-	$("#cardNumber").text(pairIndex + 1);
-	$("#display").text(currentQuestion);
-	$("#card").click(data, flip);
-	$("#next").click(data, advance);
-	$("#prev").click(data, retreat);
-	$("#add").click(data, displayInput);
-	// button to select another set
-	$("#selectAnotherButton").click(data, displaySelectAnother);
-	// button to create a new card
-	$("#createNewButton").click(data, displayCreateNew);
-	
-
-	$("div.pair").each(function() {
-		var question = $($(this).children()[0]).text();
-		$("body").append($("<h4>Question " + count++ + ":</h4>"));
-		$("body").append($("<p>" + question + "</p>"));
-		var answer = $($(this).children()[1]).text();
-		$("body").append($("<p>Answer: " + answer + "</p>"));
-	});
-});
-*/
-
-function displayCreateNew(ev) {
-
-}
-function flip(ev) {
-	if (ev.data.onDisplay == ev.data.currentQuestion) {
-		ev.data.onDisplay = ev.data.currentAnswer;
-		$("#display").text(ev.data.onDisplay);
-	}
-	else {
-		ev.data.onDisplay = ev.data.currentQuestion;
-		$("#display").text(ev.data.onDisplay);
-	}
-}
-// Use when index has been updated to update everything else and display the next question
-function update(data) {
-	data.currentPair = $(data.pairs[data.pairIndex]);
-	if (data.currentPair == null) {
-		$("#cardNumber").text('');
-		$("#display").text("{null card set}");
-	}
-	data.currentQuestion = $(data.currentPair.children()[0]).text();
-	data.currentAnswer = $(data.currentPair.children()[1]).text();
-	data.onDisplay = data.currentQuestion;
-	$("#cardNumber").text(data.pairIndex + 1);
-	$("#display").text(data.currentQuestion);
-}
-
-function del(data) {
-	data.max--;
-	data.currentPair = null;
-	data.pairs[data.pairIndex] = null;
-	data.currentQuestion = null;
-	data.currentAnswer = null;
-	var ev = {};
-	ev.data = data;
-	advance(ev);
-}
-
-function advance(ev) {
-	ev.data.pairIndex++;
-	if (ev.data.pairIndex >= ev.data.max) {
-		ev.data.pairIndex--;
-		return;
-	}
-	else {
-		update(ev.data);
-	}
-}
-function retreat(ev) {
-	ev.data.pairIndex--;
-	if (ev.data.pairIndex < 0) {
-		ev.data.pairIndex++;
-		return;
-	}
-	else {
-		update(ev.data);
-	}
-}
 

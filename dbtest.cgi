@@ -34,7 +34,8 @@ print <<END;
 		<a id="add" class="button">ADD A NEW CARD</a>
 		<a id="setAside" class="button">SET ASIDE CURRENT CARD</a><br /><br />
 		<a id="delete" class="button">PERMANENTLY REMOVE CURRENT CARD</a>
-		<a id="flipAll" class="button">FLIP ALL CARDS</a>
+		<a id="flipAll" class="button">FLIP ALL CARDS</a><br /><br />
+		<a id="shuffle" class="button">SHUFFLE</a>
 	</div>
 </div>
 END
