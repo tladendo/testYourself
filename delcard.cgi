@@ -20,6 +20,7 @@ foreach $pair (@pairs) {
 	$value =~ s/%(..)/pack("C", hex($1))/eg;
 	$FORM{$name} = $value;
 }
+
 my $question = $FORM{question};
 my $tablename = $FORM{tablename};
 if (length($tablename) == 0) {
@@ -33,9 +34,9 @@ my $dbname = "<INSERT DBNAME>";
 
 my $db_handle = DBI->connect("dbi:mysql:database=$dbname;host=$hostname;user=$username;password=$password", {AutoCommit => 1},) or die "Couldn't connect: $DBI::errstr\n";
 
-my $pre = "DELETE FROM $tablename WHERE question=$question";
+my $pre = "DELETE FROM $tablename WHERE question=\"$question\"";
 my $statement = $db_handle->prepare($pre) or die "oh no!";
-$statement->execute($id, $question, $answer) or die "oh no!";
+$statement->execute() or die "oh no!";
 $db_handle->commit;
 
 $db_handle->disconnect();
@@ -47,8 +48,9 @@ print <<END;
 		<title>You $method-ed a new card!</title>
 	</head>
 	<body>
-		<p>Question: $question; Answer: $answer</p>
-		<p>$success</p>
+		<p>Buffer: $buffer</p>
+		<p>Question: $question</p>
+		<p>Tablename: $tablename</p>
 	</body>
 </html>
 END

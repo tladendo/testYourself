@@ -135,8 +135,14 @@ Master.prototype.add = function(card) {
 	}
 }
 
-Master.prototype.del = function() {
-	$.ajax({type: 'POST', url: 'delcard.cgi?tablename=' + this.tableName + '&question=' + this.currentCard.question, async: false, success: function(text) { ans = $(text); }});
+Master.prototype.permanentlyRemove = function() {
+	//$.ajax({type: 'POST', url: 'delcard.cgi?tablename=' + this.tableName + '&question=' + this.currentCard.question, async: false, success: function() { }});
+	$.post("delcard.cgi", "question=" + this.currentCard.question + "&tablename=" + this.tableName, function(data) { });
+	this.deleteFromSession();
+}
+
+Master.prototype.deleteFromSession = function() {
+	// $.ajax({type: 'POST', url: 'delcard.cgi?tablename=' + this.tableName + '&question=' + this.currentCard.question, async: false, success: function(text) { ans = $(text); }});
 	if (this.length == 0) return 0;
 	this.length--;
 	var next = this.currentCardNode.next;
@@ -204,7 +210,8 @@ Master.prototype.actionInit = function() {
 	$("#card").click(function() { master.flip(); });
 	$("#next").click(function() { master.displayNext(); });
 	$("#prev").click(function() { master.displayPrev(); });
-	$("#delete").click(function() { master.del(); });
+	$("#setAside").click(function() { master.deleteFromSession(); });
+	$("#delete").click(function() { master.permanentlyRemove(); });
 }
 
 Master.prototype.dismantle = function() {
