@@ -28,14 +28,14 @@ if (length($tablename) == 0) {
 	$tablename = "cards";
 }
 
-my $hostname = <INSERT HOSTNAME>
-my $username = <INSERT USERNAME>
-my $password = <INSERT PASSWORD>
-my $dbname = <INSERT DBNAME>
+my $hostname = "<INSERT HOSTNAME>";
+my $username = "<INSERT USERNAME>";
+my $password = "<INSERT PASSWORD>";
+my $dbname = "<INSERT DBNAME>";
 
 my $db_handle = DBI->connect("dbi:mysql:database=$dbname;host=$hostname;user=$username;password=$password", {AutoCommit => 1},) or die "Couldn't connect: $DBI::errstr\n";
 
-my $pre = "INSERT INTO $tablename (id, question, answer) VALUES (?, ?, ?)";
+my $pre = "INSERT INTO `$tablename` (id, question, answer) VALUES (?, ?, ?)";
 my $statement = $db_handle->prepare($pre) or die "oh no!";
 $statement->execute($id, $question, $answer) or die "oh no!";
 $db_handle->commit;

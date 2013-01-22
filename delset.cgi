@@ -29,7 +29,7 @@ my $dbname = "<INSERT DBNAME>";
 
 my $db_handle = DBI->connect("dbi:mysql:database=$dbname;host=$hostname;user=$username;password=$password", {AutoCommit => 1},) or die "Couldn't connect: $DBI::errstr\n";
 
-my $pre = "DROP TABLE $tablename";
+my $pre = "DROP TABLE `$tablename`";
 my $statement = $db_handle->prepare($pre) or die "oh no!";
 $statement->execute() or die "oh no!";
 $db_handle->commit;

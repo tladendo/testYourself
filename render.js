@@ -178,6 +178,7 @@ Master.prototype.shuffle = function() {
 }
 
 Master.prototype.permanentlyRemove = function() {
+	if (this.tableName == "DEFAULT_SET") return;
 	//$.ajax({type: 'POST', url: 'delcard.cgi?tablename=' + this.tableName + '&question=' + this.currentCard.question, async: false, success: function() { }});
 	$.post("delcard.cgi", "question=" + this.currentCard.question + "&tablename=" + this.tableName, function(data) { });
 	this.deleteFromSession();
@@ -317,7 +318,7 @@ function selectNewSet(ev) {
 	master.tableName = select;
 	// Will return a div jQuery object
 	var ans = {};
-	$.ajax({type: 'GET', url: 'dbget.cgi?' + select, async: false, success: function(text) { ans = $(text); }});
+	$.ajax({type: 'GET', url: 'dbget.cgi?table=' + select, async: false, success: function(text) { ans = $(text); }});
 	function add(elt) {
 		$("body").append(elt);
 	}
@@ -335,6 +336,7 @@ function selectNewSet(ev) {
 
 // displays input when "ADD A NEW CARD" is clicked
 function displayInput(ev) {
+	if (ev.data.tableName == "DEFAULT_SET") return;
 	$("#buttons a:last-child").remove();
 	var form = "<form id='addForm'>Q: "
 	+ "<input type='text' id='questionField' /><br />" +
@@ -392,6 +394,7 @@ function postSet(ev) {
 	var tablename = $("#tableName").val();
 	var question = $("#questionField").val();
 	var answer = $("#answerField").val();
+	addOption(tablename);
 	$.post("createset.cgi", "question=" + question + "&id=1&answer=" + answer + "&tablename=" + tablename, function(data) { });
 	cancelCreate(ev.data);
 }
@@ -403,6 +406,9 @@ function cancelCreate(ev) {
 }
 
 function deleteCurrentSet(ev) {
+	if (ev.data.tableName == "DEFAULT_SET") {
+		return;
+	}
 	console.log(ev.data);
 	var master = ev.data;
 	$.post("delset.cgi", "tablename=" + master.tableName, function(data) { });
@@ -422,6 +428,11 @@ function removeSetOption(op) {
 			$(this).remove();
 		}
 	});
+}
+
+function addOption(op) {
+	var str = '<option value="' + op + '">' + op + '</option>';
+	$("#selectAnotherMenu").append($(str));
 }
 
 function listenRight(master) {
@@ -445,7 +456,7 @@ $("document").ready(function() {
 	var master = new Master();
 	master.actionInit();
 	global = master;
-	master.tableName = "cards";
+	master.tableName = "DEFAULT_SET";
 	$("#add").click(master, displayInput);
 	listenRight(master);
 });

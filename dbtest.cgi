@@ -52,7 +52,7 @@ my $dbname = "<INSERT DBNAME>";
 
 my $dbh = DBI->connect("dbi:mysql:database=$dbname;host=$hostname;user=$username;password=$password") or die "Couldn't connect: $DBI::errstr\n";
 
-my $pre = "SELECT * FROM cards";
+my $pre = "SELECT * FROM DEFAULT_SET";
 my $statement = $dbh->prepare($pre);
 $statement->execute();
 while ($row_ref = $statement->fetchrow_hashref()) {
@@ -66,7 +66,9 @@ my @tables_raw = $dbh->tables;
 print "<select id='selectAnotherMenu'>";
 foreach (@tables_raw) {
 	$_ =~ /`.+`(.+)`/;
-	print "<option value='$1'>$1</div>";
+	if ($1 ne "DEFAULT_SET") {
+		print "<option value='$1'>$1</div>";
+	}
 }
 
 print <<END;
